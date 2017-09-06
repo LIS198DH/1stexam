@@ -21,3 +21,60 @@ Further study:
 Individual analysis of tweets will probably yield more definitive results.
 My tweets are timestamped so there is an opportunity to plot my mood swings. I may also link analysis with mentions and be able to find my disposition towards specific users I have tweeted at.
 For this, access to the API is necessary. I tried to sign up for an IBM BlueMix account but I think the proxy is preventing the signup page from loading.
+
+FOLLOW UP:
+
+Signed up for an IBM BlueMix account which came with a free 30 day trial. With access to the Tone Analyzer API, I can now automate the requests.
+ToneAnalyzer Lite package comes with 2500 free API requests per month and so I had to be more selective with which tweets I was sending.
+This time, I omitted all tweets that were less than 10 words, removed all urls and images, and selected the 2480 latest tweets (saving 20 of my allocated API requests for experimentation while coding)
+I saved the file as shortlist.xls and used Python to pass each row to the Tone Analyzer endpoint and saved the result as a JSON file.
+Below is the code I used:
+
+--
+
+from pyexcel_xls import get_data
+from watson_developer_cloud import ToneAnalyzerV3
+import datetime
+
+tone_analyzer = ToneAnalyzerV3(
+    version='2016-05-19',
+    username= #REDACTED,
+    password= #REDACTED
+)
+
+data = get_data("shortlist.xls")
+
+judgedtweets = []
+
+for row in data['Sheet1']:
+    time = row[0]
+    tweet = row[1]
+    result = tone_analyzer.tone(tweet)
+    item = {'timestamp':time,'content':tweet,'analysis':result}
+    judgedtweets.append(item)
+
+
+text_file = open("output.json", "w")
+text_file.write(json.dumps(judgedtweets))
+text_file.close()
+
+---
+
+The output of the above script is a JSON file containing the text analyses of 2480 tweets. Below are images plotting the resultant probabilities as given by IBM's Tone Analyzer on the Y axis with the X axis being time (latest tweet on the left).
+
+Sadness
+https://drive.google.com/open?id=0B5ZaO-lYyA8ud1VmYldDVnByZU0
+
+Fear
+https://drive.google.com/open?id=0B5ZaO-lYyA8ueS12Yjc2N094enM
+
+Disgust
+https://drive.google.com/open?id=0B5ZaO-lYyA8uZHJwdDI5Y2lVbDg
+
+Joy
+https://drive.google.com/open?id=0B5ZaO-lYyA8ubEZ1TGlld0tXZDA
+
+Anger
+https://drive.google.com/open?id=0B5ZaO-lYyA8uZWZUNERpWGJyUDg
+
+Taken collectively, the result is similar to the 500 Tweet sample from above. However, the increased granularity of the data allows me to correlate tweet mood with external events, spot outliers, and see which are my saddest/angriest/happiest/etc tweets. The exercise also serves as a great introduction to IBM Bluemix and I am excited to try out their other tools while I still have my trial period.
